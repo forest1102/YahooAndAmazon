@@ -126,7 +126,7 @@ export const getFromSearchSheet = () =>
 
 export const setToItemSheet = (obs: Rx.Observable<string[]>) =>
 	obs
-		.bufferWithCount(5)
+		.bufferWithCount(1)
 		.concatMap((data, i) =>
 			apis.setData({
 				range: `商品!A${i * data.length + 1}:${String.fromCharCode(97 + data[0].length)}`,
