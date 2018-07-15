@@ -3,7 +3,7 @@ import * as Rx from 'rx'
 
 import { withDelay } from './customObs'
 
-const WAIT_SEC = 10 * 1000
+const WAIT_SEC = 3 * 1000
 
 export const serialize = (obj: {}, encoding: string) => {
 	return Object.keys(obj)

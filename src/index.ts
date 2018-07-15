@@ -1,7 +1,7 @@
 import * as Rx from 'rx'
 import { getAndSave, getFromSearchSheet } from './observable'
 import { searchKeys } from './title'
-import * as google from 'googleapis'
+import * as google from './googleapi'
 
 getAndSave()
 	.subscribe(
