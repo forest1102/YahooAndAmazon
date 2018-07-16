@@ -5,7 +5,7 @@ import * as google from './googleapi'
 
 getAndSave()
 	.subscribe(
-		val => console.log(JSON.stringify(val)),
+		val => console.log(val),
 		console.error
 	)
 

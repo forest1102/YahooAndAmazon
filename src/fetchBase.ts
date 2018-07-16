@@ -3,12 +3,12 @@ import * as Rx from 'rx'
 
 import { withDelay } from './customObs'
 
-const WAIT_SEC = 3 * 1000
+const WAIT_SEC = 0 * 1000
 
 export const serialize = (obj: {}, encoding: string) => {
 	return Object.keys(obj)
-		.map(key => `${encodeURIComponent(key)}=${encodeURIComponent(obj[key])}`)
 		.sort()
+		.map(key => `${encodeURIComponent(key)}=${encodeURIComponent(obj[key])}`)
 		.join('&')
 }
 

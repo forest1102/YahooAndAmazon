@@ -126,10 +126,10 @@ export const getFromSearchSheet = () =>
 
 export const setToItemSheet = (obs: Rx.Observable<string[]>) =>
 	obs
-		.bufferWithCount(1)
+		.bufferWithCount(2)
 		.concatMap((data, i) =>
-			apis.setData({
-				range: `商品!A${i * data.length + 1}:${String.fromCharCode(97 + data[0].length)}`,
+			apis.appendData({
+				range: `商品!A1:${String.fromCharCode(97 + data[0].length)}`,
 				valueInputOption: 'USER_ENTERED',
 				requestBody: {
 					values: data
@@ -139,7 +139,12 @@ export const setToItemSheet = (obs: Rx.Observable<string[]>) =>
 		.delay(5000)
 
 export const getAndSave = () =>
-	getFromSearchSheet()
+	apis.clearData({
+		range: '商品!A1:' + String.fromCharCode(97 + titleKeys.length)
+	})
+		.concatMap(res =>
+			getFromSearchSheet()
+		)
 		.concatMap(params => getAmazonAndYahoo(params))
 		.startWith(titleKeys)
 		.let(setToItemSheet)
