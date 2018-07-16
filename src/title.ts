@@ -1,10 +1,10 @@
 export const titleKeys = [
 	'ストアID',
 	'商品名',
-	'金額',
-	'URL',
 	'JAN',
 	'ASIN',
+	'金額',
+	'URL',
 	'最低金額',
 	'価格差',
 	'ランキング',
