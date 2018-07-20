@@ -7,6 +7,7 @@ export const titleKeys = [
 	'URL',
 	'最低金額',
 	'価格差',
+	'粗利',
 	'ランキング',
 	'AmazonURL',
 	'モノレートURL'

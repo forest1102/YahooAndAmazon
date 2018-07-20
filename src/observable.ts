@@ -108,7 +108,8 @@ export const getAmazonAndYahoo = (params: YahooAPI.YahooParams) =>
 								...amazon,
 								'AmazonURL': 'https://www.amazon.co.jp/gp/product/' + amazon.ASIN,
 								'モノレートURL': 'http://mnrate.com/item/aid/' + amazon.ASIN,
-								'価格差': _yahoo.金額 - amazon.最低金額
+								'価格差': _yahoo.金額 - amazon.最低金額,
+								'粗利': (_yahoo.金額 - amazon.最低金額) / amazon.最低金額
 							})
 					)
 		)
