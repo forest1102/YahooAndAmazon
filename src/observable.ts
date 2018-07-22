@@ -15,7 +15,7 @@ export const getYahooItemList = (params: YahooAPI.YahooParams) =>
 						.toArray()
 						.map(e => ({
 							'商品名': $('Name', e).text(),
-							'金額': parseInt($('Price', e).text()) || 0,
+							'yahoo店舗価格': parseInt($('Price', e).text()) || 0,
 							JAN: $('JanCode', e).text(),
 							'ストアID': params.store_id,
 							'URL': $('Url', e).first().text()
@@ -90,7 +90,7 @@ export const JANToASIN = (janCode: string) =>
 		.min((a, b) => a.price - b.price)
 		.first()
 		.map(val => ({
-			'最低金額': val.price,
+			'Amazon最低価格': val.price,
 			'ランキング': val.rank,
 			'ASIN': val.ASIN
 		}))
@@ -108,14 +108,14 @@ export const getAmazonAndYahoo = (params: YahooAPI.YahooParams) =>
 								...amazon,
 								'AmazonURL': 'https://www.amazon.co.jp/gp/product/' + amazon.ASIN,
 								'モノレートURL': 'http://mnrate.com/item/aid/' + amazon.ASIN,
-								'価格差': _yahoo.金額 - amazon.最低金額,
-								'粗利': (amazon.最低金額 > 0) ?
-									((_yahoo.金額 - amazon.最低金額) / amazon.最低金額 * 100).toFixed(2) + '%' :
+								'価格差': amazon.Amazon最低価格 - _yahoo.yahoo店舗価格,
+								'粗利': (amazon.Amazon最低価格 > 0) ?
+									((amazon.Amazon最低価格 - _yahoo.yahoo店舗価格) / amazon.Amazon最低価格 * 100).toFixed(2) + '%' :
 									''
 							})
 					)
 		)
-		.map(obj => titleKeys.map(key => String(obj[key])))
+		.map(obj => titleKeys.map(key => String(obj[key] || '')))
 		.doOnNext(console.log)
 
 
