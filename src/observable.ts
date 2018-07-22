@@ -110,7 +110,7 @@ export const getAmazonAndYahoo = (params: YahooAPI.YahooParams) =>
 								'モノレートURL': 'http://mnrate.com/item/aid/' + amazon.ASIN,
 								'価格差': _yahoo.金額 - amazon.最低金額,
 								'粗利': (amazon.最低金額 > 0) ?
-									((_yahoo.金額 - amazon.最低金額) / amazon.最低金額 * 100).toPrecision(2) + '%' :
+									((_yahoo.金額 - amazon.最低金額) / amazon.最低金額 * 100).toFixed(2) + '%' :
 									''
 							})
 					)
