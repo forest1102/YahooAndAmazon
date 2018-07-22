@@ -115,7 +115,10 @@ export const getAmazonAndYahoo = (params: YahooAPI.YahooParams) =>
 							})
 					)
 		)
-		.map(obj => titleKeys.map(key => String(obj[key])))
+		.map(obj =>
+			titleKeys
+				.map(key =>
+					(obj[key] !== undefined) ? String(obj[key]) : ''))
 
 		.doOnNext(console.log)
 
@@ -133,7 +136,7 @@ export const setToItemSheet = (obs: Rx.Observable<string[]>) =>
 		.bufferWithTimeOrCount(30 * 1000, 50)
 		.concatMap((data, i) =>
 			apis.appendData({
-				range: `商品!A1:${String.fromCharCode(97 + data[0].length)}`,
+				range: `商品!A1:${String.fromCharCode(97 + titleKeys.length)}`,
 				valueInputOption: 'USER_ENTERED',
 				requestBody: {
 					values: data
