@@ -115,7 +115,8 @@ export const getAmazonAndYahoo = (params: YahooAPI.YahooParams) =>
 							})
 					)
 		)
-		.map(obj => titleKeys.map(key => String(obj[key] || '')))
+		.map(obj => titleKeys.map(key => String(obj[key])))
+
 		.doOnNext(console.log)
 
 
