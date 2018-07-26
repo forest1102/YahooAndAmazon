@@ -17,7 +17,7 @@ export class ServiceAccount {
 
 	authorize() {
 		return Observable.if(
-			() => !!this.token && this.token.expiry_date.getTime() > Date.now() - 10 * 1000,
+			() => !!this.token && this.token.expiry_date > Date.now() - 10 * 1000,
 			Observable.of(this.token),
 			Observable.fromPromise(this.JWTAuth.authorize())
 				.doOnNext(cred => console.log(JSON.stringify(cred)))
