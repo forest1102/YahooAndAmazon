@@ -4,7 +4,6 @@ import { withDelay } from './customObs'
 import * as serviceAccount from '../config/serviceAccount.json'
 
 const sheets = google.sheets('v4')
-const spreadsheetId = '1ywpgN1lQW73mxu7TWOy7ghgc-LsdmmmVp5GkhZu8Upc'
 
 export class ServiceAccount {
 	private token: any
@@ -18,7 +17,7 @@ export class ServiceAccount {
 
 	authorize() {
 		return Observable.if(
-			() => !!this.token && this.token.expiry_date > new Date(),
+			() => !!this.token && this.token.expiry_date.getTime() > Date.now() - 10 * 1000,
 			Observable.of(this.token),
 			Observable.fromPromise(this.JWTAuth.authorize())
 				.doOnNext(cred => console.log(JSON.stringify(cred)))
@@ -33,7 +32,7 @@ export class ServiceAccount {
 
 const auth = new ServiceAccount()
 
-export const getData = (params: sheets_v4.Params$Resource$Spreadsheets$Values$Get) =>
+export const getData = (params: sheets_v4.Params$Resource$Spreadsheets$Values$Get, spreadsheetId: string) =>
 	auth.authorize()
 		.concatMap(JWTAuth =>
 			Observable.fromPromise(sheets.spreadsheets.values.get({
@@ -44,7 +43,7 @@ export const getData = (params: sheets_v4.Params$Resource$Spreadsheets$Values$Ge
 		)
 		.flatMap(res => res.data.values as (string | number)[][])
 
-export const setData = (params: sheets_v4.Params$Resource$Spreadsheets$Values$Update) =>
+export const setData = (params: sheets_v4.Params$Resource$Spreadsheets$Values$Update, spreadsheetId: string) =>
 	auth.authorize()
 		.concatMap(JWTAuth =>
 			Observable.fromPromise(sheets.spreadsheets.values.update({
@@ -53,10 +52,10 @@ export const setData = (params: sheets_v4.Params$Resource$Spreadsheets$Values$Up
 				auth: JWTAuth
 			})))
 		.flatMap(res => (res.status === 200) ? Observable.return(res.data) : Observable.throw(new Error(res.statusText)))
-		.retryWhen(withDelay)
+		.retryWhen(err => withDelay(err, 60 * 1000))
 
 
-export const clearData = (params: sheets_v4.Params$Resource$Spreadsheets$Values$Clear) =>
+export const clearData = (params: sheets_v4.Params$Resource$Spreadsheets$Values$Clear, spreadsheetId: string) =>
 	auth.authorize()
 		.concatMap(JWTAuth =>
 			Observable.fromPromise(sheets.spreadsheets.values.clear({
@@ -66,9 +65,9 @@ export const clearData = (params: sheets_v4.Params$Resource$Spreadsheets$Values$
 			}))
 		)
 		.flatMap(res => (res.status === 200) ? Observable.return(res.data) : Observable.throw(new Error(res.statusText)))
-		.retryWhen(withDelay)
+		.retryWhen(err => withDelay(err, 60 * 1000))
 
-export const appendData = (params: sheets_v4.Params$Resource$Spreadsheets$Values$Append) =>
+export const appendData = (params: sheets_v4.Params$Resource$Spreadsheets$Values$Append, spreadsheetId: string) =>
 	auth.authorize()
 		.concatMap(JWTAuth =>
 			Observable.fromPromise(sheets.spreadsheets.values.append({
@@ -78,4 +77,4 @@ export const appendData = (params: sheets_v4.Params$Resource$Spreadsheets$Values
 			}))
 		)
 		.flatMap(res => (res.status === 200) ? Observable.return(res.data) : Observable.throw(new Error(res.statusText)))
-		.retryWhen(withDelay)
+		.retryWhen(err => withDelay(err, 60 * 1000))

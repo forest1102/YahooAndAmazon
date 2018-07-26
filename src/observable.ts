@@ -2,9 +2,12 @@ import * as Rx from 'rx'
 import * as YahooAPI from './YahooAPI'
 import * as AmazonAPI from './AmazonAPI'
 import { titleKeys } from './title'
+import * as fs from 'fs-extra'
+import * as path from 'path'
 
 import * as apis from './googleapi'
 
+const sheetListPath = path.join(__dirname, '../config/sheet-list.json')
 
 export const getYahooItemList = (params: YahooAPI.YahooParams) =>
 	YahooAPI.fetchAll(params)
@@ -21,7 +24,7 @@ export const getYahooItemList = (params: YahooAPI.YahooParams) =>
 							'URL': $('Url', e).first().text()
 						}))
 				)
-				.catch(err => Rx.Observable.of({
+				.catch(err => Rx.Observable.return({
 					'商品名': '',
 					'yahoo店舗価格': 0,
 					JAN: '',
@@ -130,15 +133,15 @@ export const getAmazonAndYahoo = (params: YahooAPI.YahooParams) =>
 		.doOnNext(console.log)
 
 
-export const getFromSearchSheet = () =>
+export const getFromSearchSheet = (spreadsheetId: string) =>
 	apis.getData({
 		range: '検索!A2:D',
 		valueRenderOption: 'UNFORMATTED_VALUE'
-	})
+	}, spreadsheetId)
 		.let(YahooAPI.toYahooParam)
 		.doOnNext(console.log)
 
-export const setToItemSheet = (obs: Rx.Observable<string[]>) =>
+export const setToItemSheet = (obs: Rx.Observable<string[]>, spreadsheetId: string) =>
 	obs
 		.bufferWithTimeOrCount(30 * 1000, 50)
 		.concatMap((data, i) =>
@@ -148,17 +151,20 @@ export const setToItemSheet = (obs: Rx.Observable<string[]>) =>
 				requestBody: {
 					values: data
 				}
-			})
+			}, spreadsheetId)
 		)
 		.delay(5000)
 
 export const getAndSave = () =>
-	apis.clearData({
-		range: '商品!A1:' + String.fromCharCode(97 + titleKeys.length)
-	})
-		.concatMap(res =>
-			getFromSearchSheet()
+	Rx.Observable.fromPromise(fs.readJSON(sheetListPath))
+		.concatMap((spreadsheetId: string) =>
+			apis.clearData({
+				range: '商品!A1:' + String.fromCharCode(97 + titleKeys.length)
+			}, spreadsheetId)
+				.concatMap(res =>
+					getFromSearchSheet(spreadsheetId)
+				)
+				.concatMap(params => getAmazonAndYahoo(params))
+				.startWith(titleKeys)
+				.let(obs => setToItemSheet(obs, spreadsheetId))
 		)
-		.concatMap(params => getAmazonAndYahoo(params))
-		.startWith(titleKeys)
-		.let(setToItemSheet)
