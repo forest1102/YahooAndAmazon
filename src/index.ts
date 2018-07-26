@@ -1,12 +1,12 @@
-import * as Rx from 'rx'
 import { getAndSave, getFromSearchSheet } from './observable'
-import { searchKeys } from './title'
-import * as google from './googleapi'
+import * as moment from 'moment'
+const start = moment()
 
 getAndSave()
 	.subscribe(
 		val => console.log(val),
-		console.error
+		console.error,
+		() => console.log('Completed', start.fromNow())
 	)
 
 // getAmazonAndYahoo({
