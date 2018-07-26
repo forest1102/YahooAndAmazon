@@ -157,7 +157,8 @@ export const setToItemSheet = (obs: Rx.Observable<string[]>, spreadsheetId: stri
 
 export const getAndSave = () =>
 	Rx.Observable.fromPromise(fs.readJSON(sheetListPath))
-		.concatMap((spreadsheetId: string) =>
+		.flatMap(arr => arr as string[])
+		.concatMap(spreadsheetId =>
 			apis.clearData({
 				range: '商品!A1:' + String.fromCharCode(97 + titleKeys.length)
 			}, spreadsheetId)
