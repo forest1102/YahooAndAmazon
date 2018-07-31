@@ -24,14 +24,14 @@ export const getYahooItemList = (params: YahooAPI.YahooParams) =>
 							'URL': $('Url', e).first().text()
 						}))
 				)
-				.catch(err => Rx.Observable.return({
-					'商品名': '',
-					'yahoo店舗価格': 0,
-					JAN: '',
-					'ストアID': params.store_id,
-					'URL': ''
-				}))
 		)
+		.catch(err => Rx.Observable.return({
+			'商品名': '',
+			'yahoo店舗価格': 0,
+			JAN: '',
+			'ストアID': params.store_id,
+			'URL': ''
+		}))
 
 export const JANToASIN = (janCode: string) =>
 	Rx.Observable.if(
