@@ -3,7 +3,6 @@ import * as Rx from 'rx'
 
 import { withDelay } from './customObs'
 
-const WAIT_SEC = 0 * 1000
 
 export const serialize = (obj: {}, encoding: string) => {
 	return Object.keys(obj)
@@ -12,7 +11,7 @@ export const serialize = (obj: {}, encoding: string) => {
 		.join('&')
 }
 
-export const fetch = (url: string, retry = true, isDelayed = true) =>
+export const fetch = (url: string, retry = true, wait = 0) =>
 	Rx.Observable.fromPromise(client.fetch(url))
 		.map((result) => {
 			console.log(url)
@@ -26,8 +25,8 @@ export const fetch = (url: string, retry = true, isDelayed = true) =>
 		)
 		.let(
 			obs =>
-				isDelayed ?
+				(wait > 0) ?
 					obs
-						.delay(WAIT_SEC) :
+						.delay(wait) :
 					obs
 		)

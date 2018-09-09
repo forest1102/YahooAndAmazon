@@ -33,6 +33,118 @@ export const getYahooItemList = (params: YahooAPI.YahooParams) =>
 			'URL': ''
 		}))
 
+export const JANsToASINs = (janObs: Rx.Observable<string>) =>
+	janObs
+		.bufferWithCount(5)
+		.map(arr => ({
+			len: arr.length,
+			...arr
+				.map((jan, i) => ({ jan, i }))
+				.filter(({ jan }) => !!jan)
+				.reduce((acc, cur, i) => ({
+					idx: [...acc.idx, cur.i],
+					q: {
+						...acc.q,
+						[`IdList.Id.${i + 1}`]: cur.jan
+					}
+				}),
+					{
+						idx: [] as number[],
+						q: {
+							'IdType': 'JAN',
+							'Action': 'GetMatchingProductForId',
+						}
+					})
+		}))
+		.concatMap(({ q, idx, len }) =>
+			Rx.Observable.if(
+				() => idx.length > 0,
+
+				AmazonAPI.fetch(q)
+					.flatMap($ =>
+						$('GetMatchingProductForIdResult')
+							.toArray()
+							.map(e =>
+								$('Product', e)
+									.toArray()
+									.map((product, i) => ({
+										i,
+										ASIN: $('ASIN', product).first().text(),
+										rank: parseInt($('Rank', product).first().text()) || 0
+									}))
+							)
+					)
+					.take(20)
+					.share()
+					.map(arr => Rx.Observable.from(arr))
+					.concatMap(obs =>
+						Rx.Observable.zip(
+
+							obs
+								.reduce((acc, { ASIN, i }) => ({
+									[`ASINList.ASIN.${(i + 1)}`]: ASIN,
+									...acc,
+								}), null as { [key: string]: string })
+								.filter(a => !!a)
+								.map(asinParam => ({
+									...asinParam,
+									Action: 'GetLowestOfferListingsForASIN',
+									ItemCondition: 'New'
+								}))
+								.flatMap(queries => AmazonAPI.fetch(queries))
+								.doOnNext(
+									$ => ($('Error').length > 0) ?
+										console.log($('Error').html()) :
+										null
+								)
+								.flatMap($ =>
+									$('GetLowestOfferListingsForASINResult')
+										.toArray()
+										// .filter(el => !$('Error', el).length)
+										.map(el => ({
+											ASIN: $('ASIN', el).first().text(),
+											price: Number($('LandedPrice', el).children('Amount').first().text())
+										}))
+								),
+							obs.map(({ ASIN, rank }) => ({ ASIN, rank })),
+							(LowestOfferListing, product) => ({
+								...LowestOfferListing,
+								...product
+							} as AmazonAPI.AmazonData)
+						)
+							.filter(val => val.price > 0)
+							.catch(err => {
+								console.log(JSON.stringify(err))
+								return Rx.Observable.empty()
+							})
+							.defaultIfEmpty({ ASIN: '', rank: 0, price: 0 } as AmazonAPI.AmazonData)
+							.min((a, b) => a.price - b.price)
+							.first()
+							.map(val => ({
+								'Amazon最低価格': val.price,
+								'ランキング': val.rank,
+								'ASIN': val.ASIN
+							}))
+					)
+					.zip(
+						Rx.Observable.from(idx),
+						(data, i) =>
+							({ data, i })
+					)
+			)
+				.reduce((acc, cur) => {
+					acc[cur.i] = cur.data
+					return acc
+				}, [...Array(len)].fill(
+					{
+						'Amazon最低価格': 0,
+						'ランキング': 0,
+						'ASIN': ''
+					}))
+		)
+		.flatMap(arr => arr)
+
+
 export const JANToASIN = (janCode: string) =>
 	Rx.Observable.if(
 		() => !!janCode,
@@ -107,11 +219,14 @@ export const JANToASIN = (janCode: string) =>
 
 export const getAmazonAndYahoo = (params: YahooAPI.YahooParams) =>
 	getYahooItemList(params)
-		.concatMap(
-			yahoo =>
-				Rx.Observable.of(yahoo)
+		.share()
+		.let(
+			obs =>
+				obs
 					.zip(
-						JANToASIN(yahoo.JAN),
+						obs
+							.map(yahoo => yahoo.JAN)
+							.let(janObs => JANsToASINs(janObs)),
 						(_yahoo, amazon) =>
 							({
 								..._yahoo,

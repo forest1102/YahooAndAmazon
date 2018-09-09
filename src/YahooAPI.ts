@@ -21,7 +21,7 @@ export const fetch = (params: YahooParams) =>
 	})
 		.map(p => 'https://shopping.yahooapis.jp/ShoppingWebService/V1/itemSearch?'
 			+ client.serialize(p, 'utf8'))
-		.concatMap(url => client.fetch(url))
+		.concatMap(url => client.fetch(url, true, 5000))
 
 export const fetchAll = params =>
 	fetch(params)
