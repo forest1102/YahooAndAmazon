@@ -91,7 +91,7 @@ export const JANsToASINs = (janObs: Rx.Observable<string>) =>
 									Action: 'GetLowestOfferListingsForASIN',
 									ItemCondition: 'New'
 								}))
-								.flatMap(queries => AmazonAPI.fetch(queries))
+								.concatMap(queries => AmazonAPI.fetch(queries))
 								.doOnNext(
 									$ => ($('Error').length > 0) ?
 										console.log($('Error').html()) :
@@ -154,7 +154,7 @@ export const JANToASIN = (janCode: string) =>
 			'IdList.Id.1': janCode,
 			'IdType': 'JAN'
 		})
-			.flatMap(queries => AmazonAPI.fetch(queries))
+			.concatMap(queries => AmazonAPI.fetch(queries))
 			.flatMap($ =>
 				$('Product')
 					.toArray()
@@ -180,7 +180,7 @@ export const JANToASIN = (janCode: string) =>
 							Action: 'GetLowestOfferListingsForASIN',
 							ItemCondition: 'New'
 						}))
-						.flatMap(queries => AmazonAPI.fetch(queries))
+						.concatMap(queries => AmazonAPI.fetch(queries))
 						.doOnNext(
 							$ => ($('Error').length > 0) ?
 								console.log($('Error').html()) :
@@ -220,7 +220,9 @@ export const JANToASIN = (janCode: string) =>
 export const getAmazonAndYahoo = (params: YahooAPI.YahooParams) =>
 	getYahooItemList(params)
 		.share()
-		.let(
+		.bufferWithCount(5)
+		.map(arr => Rx.Observable.from(arr))
+		.concatMap(
 			obs =>
 				obs
 					.zip(
